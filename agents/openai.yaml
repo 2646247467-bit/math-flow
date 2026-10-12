@@ -1,0 +1,4 @@
+interface:
+  display_name: "Math-Flow"
+  short_description: "Deconstruct paper modules into math data flows with tensor shapes"
+  default_prompt: "使用math-flow解析论文中Self-Attention模块"

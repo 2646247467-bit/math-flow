@@ -1,0 +1,31 @@
+{
+  "skill_name": "math-flow",
+  "version": "1.0.0",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "使用math-flow解析论文中Self-Attention模块",
+      "expected_output": "A Chinese Math-Flow card with evidence header, Sections 1-4 in the fixed bilingual headings, explicit assumptions for B/N/C/d/h, step-wise formulas with dimension transforms, and attention family checks (QKV, heads, softmax axis, output projection)."
+    },
+    {
+      "id": 2,
+      "prompt": "Paper Equation (3) defines SRA with reduction ratio r. 使用math-flow解析论文中SRA模块，严格按论文公式。",
+      "expected_output": "Source mode paper-equation, module family attention, reduction-ratio shape effects on K/V shown as dedicated steps, paper symbols preferred, no silent replacement by vanilla MHSA."
+    },
+    {
+      "id": 3,
+      "prompt": "I only have a block diagram of a Cross-Attention fusion module without closed-form equations. 使用math-flow解析论文中Cross-Attention模块。",
+      "expected_output": "Source mode paper-structure, reconstructed steps labeled [Analysis], distinct Q vs K/V sources, assumptions listed in header, Sections 1-4 complete."
+    },
+    {
+      "id": 4,
+      "prompt": "使用math-flow解析论文中BatchNorm2d模块，输入是 (B,C,H,W)。",
+      "expected_output": "Module family normalization, shape-preserving normalize step, affine gamma/beta broadcast shape defined, Chinese prose with exact Section headings."
+    },
+    {
+      "id": 5,
+      "prompt": "Generate the Math-Flow card and run the bundled auditor; fix any errors before final delivery.",
+      "expected_output": "Draft written to math-flow-*.md, scripts/audit_math_flow.py executed from SKILL_DIR, audit-report.json produced, delivery only after status=pass."
+    }
+  ]
+}

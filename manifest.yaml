@@ -1,0 +1,52 @@
+name: math-flow
+version: 1.0.0
+description: >
+  Declarative routing for a source-grounded four-section Math-Flow card.
+  The module_family axis changes specialized checks while the final card
+  structure remains stable.
+
+always_load:
+  - static/core/principles.md
+  - static/core/workflow.md
+  - static/core/output-contract.md
+
+axes:
+  module_family:
+    detect: |
+      Select one primary family from the module's computational role:
+        attention     - Q/K/V, similarity, softmax weighting, cross/self-attention, SRA, deformable attention
+        convolution   - Conv/DWConv/Ghost/Inception-style local kernels and channel mixing
+        normalization - BN/LN/GN/IN and affine scale-shift variants
+        aggregation   - pooling, GAP/GMP, SPP/ASPP, gather-scatter, token merging
+        recurrent     - RNN/LSTM/GRU and temporal state updates
+        generic       - fallback when the module does not fit the above
+      Load exactly one value.
+    values:
+      attention:     static/fragments/module_family/attention.md
+      convolution:   static/fragments/module_family/convolution.md
+      normalization: static/fragments/module_family/normalization.md
+      aggregation:   static/fragments/module_family/aggregation.md
+      recurrent:     static/fragments/module_family/recurrent.md
+      generic:       static/fragments/module_family/generic.md
+    default: generic
+    multi: false
+
+references:
+  on_demand:
+    - condition: writing tensor shapes, batch/channel/sequence conventions, or reshape/transpose notes
+      path: references/notation.md
+    - condition: labeling paper facts, reconstructions, assumptions, or canonical fallbacks
+      path: references/provenance.md
+    - condition: needing a worked end-to-end template for section formatting
+      path: references/examples/self-attention.md
+
+quality_tools:
+  audit_script: scripts/audit_math_flow.py
+  audit_use_when: after the first complete Math-Flow draft and after every corrective revision
+  audit_output: audit-report.json
+  script_resolution: resolve relative to the loaded SKILL.md directory, never the user working directory
+  replacement_scripts: forbidden during normal Math-Flow generation
+  source_modes:
+    - paper-equation
+    - paper-structure
+    - canonical-fallback

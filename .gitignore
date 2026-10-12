@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+audit-report.json
+math-flow-*.md
+!references/examples/*.md
+.DS_Store
+Thumbs.db
