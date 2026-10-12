@@ -40,26 +40,26 @@ If the module name is missing, ask once for the module name before drafting.
 
 ### 3. Establish source mode
 
-Choose exactly one mode and state it in the card header:
+选择一种来源模式，并在输出状态头中使用对应中文值：
 
-| Mode | When | Rule |
+| 状态头取值 | 适用情况 | 规则 |
 |------|------|------|
-| `paper-equation` | Paper gives explicit equations for the module | Prefer paper symbols and formulas; cite equation/section |
-| `paper-structure` | Paper describes the module in text/figure without closed-form equations | Reconstruct a faithful math flow; mark reconstructed steps as `[Analysis]` |
-| `canonical-fallback` | No reliable paper text for this module | Use the standard/canonical definition; mark assumptions explicitly |
+| `论文公式` | 论文给出明确公式 | 优先沿用论文符号，并注明公式或章节 |
+| `论文结构` | 论文只有文字或框图描述 | 忠实重建数学流，并标注为 `[分析]` |
+| `通用定义` | 没有可靠的论文材料 | 使用标准定义，并显式标注假设 |
 
-Never silently mix a textbook variant with a paper-specific variant.
+不得静默混用教材通用版本与论文特有版本。
 
 ### 4. Classify module family
 
-Using `manifest.yaml` → `axes.module_family`, select one primary family and load its fragment:
+依据 `manifest.yaml` → `axes.module_family` 选择一个模块类型并加载相应片段。内部路由键与状态头中文值对应如下：
 
-- `attention`
-- `convolution`
-- `normalization`
-- `aggregation`
-- `recurrent`
-- `generic` (default when uncertain)
+- `attention` → `注意力`
+- `convolution` → `卷积`
+- `normalization` → `归一化`
+- `aggregation` → `聚合`
+- `recurrent` → `循环`
+- `generic` → `通用`（无法确定时）
 
 ### 5. Draft the fixed 4-section card
 
@@ -69,6 +69,13 @@ Apply in order:
 2. selected module-family fragment
 3. core workflow
 4. output contract
+
+撰写时：
+
+- 第 2/3/4 节中所有形状定义与计算式一律使用三行块级 `$$` 公式；
+- 行内 `$...$` 仅允许极简单符号（如 `$X$`、`$N$`），禁止行内写 `\in`、上下标或命令；
+- 第 3 节按语义完整阶段拆分；每一步包含**输入张量**、**数学公式**、**输出张量**、**维度变换**、**作用**；
+- 分支、残差和多输入输出使用命名张量语法。
 
 Read [references/notation.md](references/notation.md) before writing shapes.  
 Read [references/provenance.md](references/provenance.md) before labeling assumptions or reconstructions.  
@@ -88,7 +95,8 @@ python "SKILL_DIR/scripts/audit_math_flow.py" PATH/TO/math-flow-<module>.md \
 ```
 
 4. If the auditor reports any `error`, fix and re-audit. Do not deliver with unresolved errors.
-5. Never invent a replacement auditor during a normal run.
+5. Optionally run executable evals: `python "SKILL_DIR/scripts/run_evals.py"`.
+6. Never invent a replacement auditor during a normal run.
 
 ## Trigger Condition
 
@@ -102,9 +110,9 @@ Examples: `使用math-flow解析论文中SRA模块`, `使用math-flow解析论�
 
 Near-synonym triggers: explicit requests for math-flow / 数学数据流 / 张量维度流转解析 of a paper module.
 
-## Language
+## 语言
 
-Always respond in Simplified Chinese for explanatory prose. Keep symbols, operator names, and established English technical terms in canonical form. Section titles must follow the output contract exactly (bilingual headings).
+所有输出标题、字段名、状态信息和解释文字均使用简体中文。仅保留论文固有模块名、标准缩写及数学符号。章节标题严格使用输出契约规定的纯中文标题。
 
 ## Additional resources
 

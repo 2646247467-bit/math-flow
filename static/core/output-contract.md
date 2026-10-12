@@ -1,90 +1,184 @@
-# Output contract
+# 输出契约
 
-Default deliverable:
+默认产物：
 
 ```text
 math-flow-<module-slug>.md
 ```
 
-Also emit when auditing from a file:
+文件审计时另输出：
 
 ```text
 audit-report.json
 ```
 
-## Evidence-status header (required)
+## 状态头（必需）
 
-Place this block at the top of the card, before Section 1:
-
-```markdown
-> Module: <name>
-> Source mode: paper-equation / paper-structure / canonical-fallback
-> Module family: attention / convolution / normalization / aggregation / recurrent / generic
-> Source coverage: Full module equations / Partial description / Canonical knowledge only
-> Assumptions: <semicolon-separated list, or None>
-> Layout convention: e.g. tokens (B, N, C) / image (B, C, H, W)
-```
-
-## Fixed body structure (mandatory)
-
-**必须严格遵循以下 4 段结构，不得跳过任一节。** Section headings must match exactly:
-
-### 1. 模块原理总结 (Module Principle Summary)
-
-- Provide a concise summary of the module's core theoretical principle and its purpose in the network (e.g., "What problem does it solve?", "What is its core mathematical innovation?").
-- Keep this conceptual and high-level before diving into the specific math.
-
-### 2. 具体输入定义 (Specific Input Definition)
-
-- Define all specific input variables mathematically.
-- Explicitly state the initial tensor shapes/dimensions using standard notation (e.g., $X \in \mathbb{R}^{B \times C \times H \times W}$ for image features, or $P \in \mathbb{R}^{B \times N \times 3}$ for point clouds).
-- Explain the physical/semantic meaning of each specific input (e.g., Query, Key, Value, or Coordinate inputs).
-
-### 3. 完整数据流转过程 (Complete Mathematical Data Flow)
-
-Break down the module's internal processes sequentially. For EACH step in the flow, provide:
-
-- **Operation Name:** The name of the process (e.g., Linear Projection, Spatial Reduction, Feature Concatenation).
-- **Mathematical Formula:** The exact mathematical operation. Use block LaTeX for standalone equations (e.g., $$Q = X W_q$$).
-- **Dimension Transformation:** Show exactly how the tensor shape changes in this specific step (e.g., `(B, N, C) -> (B, N, D)`).
-- **Explanation:** A brief description of what this step achieves functionally.
-
-Use this per-step template:
+放在第 1 节之前：
 
 ```markdown
-#### Step k: <Operation Name>
-
-**Mathematical Formula:**
-
-$$
-<equation>
-$$
-
-**Dimension Transformation:** `(in_shape) -> (out_shape)`
-
-**Explanation:** <一句话功能说明>
+> 模块：<名称>
+> 来源模式：论文公式 / 论文结构 / 通用定义
+> 模块类型：注意力 / 卷积 / 归一化 / 聚合 / 循环 / 通用
+> 来源覆盖：完整模块公式 / 部分描述 / 仅通用知识
+> 假设：<以分号分隔；无假设时写“无”>
+> 布局约定：例如序列 (B, N, C) / 图像 (B, C, H, W)
 ```
 
-### 4. 具体输出总结 (Specific Output Summary)
+来源模式为“通用定义”时，来源覆盖必须写“仅通用知识”。
+状态头中的符号直接写 ASCII（如 `B`、`N`、`d_h=d/h`），不要使用 `$...$`。
 
-- Define the final specific output variable.
-- State its final tensor shape.
-- Briefly explain what this output represents and how it seamlessly feeds into the next module of the network.
+## 固定正文结构（必需）
 
-## Formatting Rules
+**必须严格遵循以下 4 段结构，不得跳过任一节。** 标题必须完全一致：
 
-- Use inline LaTeX `$equation$` for variables in text and block LaTeX `$$equation$$` for standalone formulas. Ensure no spaces between the `$` and the equation.
-- Be highly specific about matrix multiplications, element-wise operations (Hadamard product $\odot$), concatenations, and nonlinear activations.
-- If the user does not specify hyperparameter sizes, explicitly state your reasonable assumptions (e.g., assuming batch size $B$, sequence length $N$, hidden dimension $d$).
-- Always respond in Chinese, maintaining academic and rigorous engineering terminology.
+### 1. 模块原理总结
 
-## Quality gates (block delivery)
+- 简洁说明模块解决的问题、网络中的作用和核心数学思想。
+- 本节保持概念层次，不提前展开逐步计算。
 
-Block final delivery when:
+### 2. 具体输入定义
 
-- any of Sections 1–4 is missing or out of order;
-- an input/output lacks symbol or shape;
-- a Section-3 step lacks formula or dimension transformation;
-- dimension chain is discontinuous without an explicit reshape/view step;
-- `canonical-fallback` is used but assumptions are hidden;
-- auditor reports any `error`.
+- 用中文说明每个输入的语义。
+- **所有张量形状、集合归属、符号对应中的数学式，必须使用块级 `$$` 公式**，不得写在行内 `$...$` 中。
+- 第 3 节“输入张量”出现的外部输入，必须先在本节用块公式定义。
+
+推荐写法：
+
+```markdown
+- 输入特征：批量序列特征。
+
+$$
+X\in\mathbb{R}^{B\times N\times C}
+$$
+
+- 投影矩阵：
+
+$$
+W_Q,W_K,W_V\in\mathbb{R}^{C\times d},\quad W_O\in\mathbb{R}^{d\times C}
+$$
+```
+
+### 3. 完整数据流转过程
+
+按**语义完整阶段**拆解，而不是按每个底层算子机械拆分：
+
+- 可以合并连续、无分支、无需被后续单独引用的操作。
+- 当中间张量被多个后续步骤复用、形成分支/残差、改变关键语义，或合并后难以看清维度时，才单独成步。
+- 优先在一个公式中直接写复合映射，避免只为过渡而引入无意义中间符号。
+
+每一步必须包含以下五个中文字段：
+
+- **输入张量：** 使用 `` `名称:(形状)` `` 列出本步依赖
+- **数学公式：** 使用可渲染的块级 LaTeX
+- **输出张量：** 列出供后续步骤使用的结果
+- **维度变换：** 使用命名张量描述数据边
+- **作用：** 用一句中文解释该阶段的功能
+
+模板：
+
+```markdown
+#### 步骤 k：<操作名称>
+
+**输入张量：** `X:(B, N, C)`
+
+**数学公式：**
+
+$$
+Q_h=\operatorname{reshape}(XW_Q)
+$$
+
+**输出张量：** `Q_h:(B, h, N, d_h)`
+
+**维度变换：** `X:(B, N, C) -> Q_h:(B, h, N, d_h)`
+
+**作用：** 一步完成查询投影与多头布局变换。
+```
+
+#### 维度变换语法
+
+| 模式 | 示例 | 用途 |
+|------|------|------|
+| 单输入映射 | `X:(B,N,C) -> Q_h:(B,h,N,d_h)` | 投影、变形、激活或复合映射 |
+| 双输入乘法 | `Q_h:(B,h,N,d_h) x K_h:(B,h,N,d_h) -> A:(B,h,N,N)` | 矩阵乘法 |
+| 残差相加 | `X:(B,N,C) + F:(B,N,C) -> Y:(B,N,C)` | 跳跃连接 |
+| 逐元素乘法 | `G:(B,N,C) odot H:(B,N,C) -> Z:(B,N,C)` | 门控 |
+| 多输出 | `X:(B,N,C) -> Q_h:(...), K_h:(...), V_h:(...)` | 并行投影或拆分 |
+
+规则：
+
+1. “输入张量”中的名称必须已在第 2 节或先前步骤的“输出张量”中定义。
+2. “输出张量”中的名称可供后续步骤引用。
+3. 分支、残差和多输入输出必须使用命名形式。
+4. 连续性按张量依赖图检查，不强制相邻步骤首尾线性相接。
+
+### 4. 具体输出总结
+
+- 最终输出的形状定义必须使用块级 `$$` 公式。
+- 用中文说明输出语义及其如何接入后续模块。
+- 最终输出必须由第 3 节某一步的“输出张量”产生。
+
+推荐写法：
+
+```markdown
+- 最终输出：与输入同形状的上下文增强特征。
+
+$$
+Y\in\mathbb{R}^{B\times N\times C}
+$$
+```
+
+## LaTeX 渲染规则
+
+### 必须使用块公式的内容
+
+以下内容**禁止**放在行内 `$...$`，必须写成三行块公式：
+
+- 任何含 `\in`、`\mathbb`、`\mathrm`、`\operatorname`、`\frac`、`\sqrt` 的式子
+- 任何含上下标、撇号、矩阵/拼接记号的式子
+- 第 2 节输入定义、第 3 节计算式、第 4 节输出形状
+
+块公式格式：
+
+```text
+$$
+Y=XW
+$$
+```
+
+### 行内 `$...$` 的严格限制
+
+行内公式**仅允许**极简单符号，内容必须匹配：
+
+```text
+[A-Za-z][A-Za-z0-9]*
+```
+
+例如允许：`$X$`、`$Y$`、`$B$`、`$N$`、`$C$`。
+
+禁止在行内出现：`_`、`^`、`\`、`'`、`=`、`;`、`,` 以及任何 LaTeX 命令。
+需要下标或复合符号时，改用块公式，或用代码记号 `` `W_Q` ``。
+
+### 其他渲染约束
+
+- 数学块内部只写 LaTeX，不写中文、Markdown 反引号、列表符号或代码围栏。
+- 优先使用兼容 KaTeX/MathJax 的基础命令：`\frac`、`\sqrt`、`\mathrm`、`\operatorname`、`\mathbb`、`\sum`。
+- Softmax 写作 `\operatorname{softmax}`；转置写作 `^{\mathsf{T}}` 或 `^{\top}`。
+- 不使用 `\(...\)`、`\[...\]`、`\begin{equation}`、`\tag`、自定义宏。
+- 所有花括号必须配对。不要在数学环境中直接使用 Unicode 运算符（如 `×`、`→`、`⊙`），应写成 `\times`、`\to`、`\odot`。
+- 撇号符号写作 `^{\prime}`，禁止 `$P_i'^{(t)}$` 这类夹心写法；应写成 `$P_i^{\prime(t)}$` 的块公式形式。
+- 解释文字、标题、字段名全部使用中文；仅保留论文固有模块名、标准缩写和数学符号。
+
+## 质量门禁
+
+以下情况一律视为硬错误，不得交付：
+
+- 四节缺失、标题不符或顺序错误
+- 状态头字段缺失或取值非法
+- 第 2 节或第 4 节缺少块级形状定义
+- 出现复杂行内 `$...$`（含命令、上下标、撇号等）
+- 步骤编号不连续，或任一步缺少五个必需字段
+- 数学公式分隔符不规范、花括号不配对或包含禁用环境
+- 输入张量未定义
+- 分支/残差/多输入输出使用匿名维度链
+- 审计器报告任何 `error`

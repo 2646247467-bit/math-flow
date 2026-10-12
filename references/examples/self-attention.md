@@ -1,81 +1,104 @@
-# Example: Self-Attention
+# 自注意力示例
 
-Trigger: `使用math-flow解析论文中Self-Attention模块`
+触发语：`使用math-flow解析论文中自注意力模块`
 
 ---
 
-> Module: Self-Attention
-> Source mode: canonical-fallback
-> Module family: attention
-> Source coverage: Canonical knowledge only
-> Assumptions: batch $B$; sequence length $N$; input width $C$; projected width $d=C$; heads $h$ with $d_h=d/h$; layout `(B, N, C)`
-> Layout convention: tokens (B, N, C)
+> 模块：自注意力
+> 来源模式：通用定义
+> 模块类型：注意力
+> 来源覆盖：仅通用知识
+> 假设：批大小 B；序列长度 N；输入维度 C；投影维度 d=C；头数 h；单头维度 d_h=d/h
+> 布局约定：序列 (B, N, C)
 
-## 1. 模块原理总结 (Module Principle Summary)
+## 1. 模块原理总结
 
-Self-Attention 通过对同一特征序列构造 Query / Key / Value，用相似度加权聚合全局上下文，使每个位置都能依赖任意其他位置。其核心数学创新是用缩放点积注意力将序列建模为可并行的加权求和，而非递推依赖。
+自注意力通过查询、键和值计算序列内部的相关性，并对全局信息进行加权聚合，使每个位置都能根据内容选择性地获取其他位置的信息。
 
-## 2. 具体输入定义 (Specific Input Definition)
+## 2. 具体输入定义
 
-- 输入特征：$X \in \mathbb{R}^{B \times N \times C}$，每个 token 的特征向量。`[Canonical]`
-- 投影矩阵：$W_Q, W_K, W_V \in \mathbb{R}^{C \times d}$，$W_O \in \mathbb{R}^{d \times C}$。`[Canonical]`
-
-## 3. 完整数据流转过程 (Complete Mathematical Data Flow)
-
-#### Step 1: Linear Projection (Q/K/V)
-
-**Mathematical Formula:**
+- 输入特征：批量序列特征。
 
 $$
-Q = X W_Q,\quad K = X W_K,\quad V = X W_V
+X\in\mathbb{R}^{B\times N\times C}
 $$
 
-**Dimension Transformation:** `(B, N, C) -> (B, N, d)`（对 $Q,K,V$ 各自成立）
-
-**Explanation:** 将输入映射到查询、键、值空间，为相似度计算与特征聚合做准备。
-
-#### Step 2: Multi-Head Reshape
-
-**Mathematical Formula:**
+- 投影矩阵：
 
 $$
-Q \leftarrow \mathrm{Reshape}(Q) \in \mathbb{R}^{B \times h \times N \times d_h}
+W_Q,W_K,W_V\in\mathbb{R}^{C\times d},\quad W_O\in\mathbb{R}^{d\times C}
 $$
 
-（$K,V$ 同理）
+## 3. 完整数据流转过程
 
-**Dimension Transformation:** `(B, N, d) -> (B, h, N, d_h)`
+#### 步骤 1：查询、键、值投影与多头变形
 
-**Explanation:** 将通道维拆成多头，使各子空间可并行学习不同关系模式。
+**输入张量：** `X:(B, N, C)`
 
-#### Step 3: Scaled Dot-Product Attention
-
-**Mathematical Formula:**
+**数学公式：**
 
 $$
-A = \mathrm{softmax}\left(\frac{Q K^{\top}}{\sqrt{d_h}}\right),\quad
-H = A V
+Q_h=\operatorname{reshape}(XW_Q),\quad K_h=\operatorname{reshape}(XW_K),\quad V_h=\operatorname{reshape}(XW_V)
 $$
 
-**Dimension Transformation:**  
-`QK^T: (B, h, N, d_h) x (B, h, d_h, N) -> (B, h, N, N)`；  
-`AV: (B, h, N, N) x (B, h, N, d_h) -> (B, h, N, d_h)`
+**输出张量：** `Q_h:(B, h, N, d_h), K_h:(B, h, N, d_h), V_h:(B, h, N, d_h)`
 
-**Explanation:** 用缩放点积得到注意力权重，再对 Value 做加权求和，聚合全局上下文。
+**维度变换：** `X:(B, N, C) -> Q_h:(B, h, N, d_h), K_h:(B, h, N, d_h), V_h:(B, h, N, d_h)`
 
-#### Step 4: Concatenate Heads + Output Projection
+**作用：** 一步完成三组线性投影与多头布局变换，避免引入只用于过渡的投影张量。
 
-**Mathematical Formula:**
+#### 步骤 2：缩放点积与权重归一化
+
+**输入张量：** `Q_h:(B, h, N, d_h), K_h:(B, h, N, d_h)`
+
+**数学公式：**
 
 $$
-Y = \mathrm{Concat}(H_1,\ldots,H_h)\, W_O
+A=\operatorname{softmax}_{N}\left(\frac{Q_hK_h^{\mathsf{T}}}{\sqrt{d_h}}\right)
 $$
 
-**Dimension Transformation:** `(B, h, N, d_h) -> (B, N, d) -> (B, N, C)`
+**输出张量：** `A:(B, h, N, N)`
 
-**Explanation:** 合并多头表示并投影回原通道维，得到可与残差/FFN 衔接的输出特征。
+**维度变换：** `Q_h:(B, h, N, d_h) x K_h:(B, h, N, d_h) -> A:(B, h, N, N)`
 
-## 4. 具体输出总结 (Specific Output Summary)
+**作用：** 直接得到各注意力头在键序列维上的归一化权重。
 
-- 最终输出：$Y \in \mathbb{R}^{B \times N \times C}$
-- 语义：与输入同形状的上下文增强特征；通常经残差连接与 LayerNorm 后送入 FFN 或下一 Transformer Block。
+#### 步骤 3：值聚合与多头合并
+
+**输入张量：** `A:(B, h, N, N), V_h:(B, h, N, d_h)`
+
+**数学公式：**
+
+$$
+H=\operatorname{reshape}(AV_h)
+$$
+
+**输出张量：** `H:(B, N, d)`
+
+**维度变换：** `A:(B, h, N, N) x V_h:(B, h, N, d_h) -> H:(B, N, d)`
+
+**作用：** 对值向量加权聚合，并直接合并所有注意力头。
+
+#### 步骤 4：输出投影
+
+**输入张量：** `H:(B, N, d)`
+
+**数学公式：**
+
+$$
+Y=HW_O
+$$
+
+**输出张量：** `Y:(B, N, C)`
+
+**维度变换：** `H:(B, N, d) -> Y:(B, N, C)`
+
+**作用：** 将多头聚合特征映射回输入通道维度。
+
+## 4. 具体输出总结
+
+- 最终输出：融合全局上下文后的序列特征，可继续进入残差连接、归一化层或前馈网络。
+
+$$
+Y\in\mathbb{R}^{B\times N\times C}
+$$

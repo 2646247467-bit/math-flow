@@ -36,7 +36,7 @@
 ## 工作方式
 
 1. 读取 `manifest.yaml` 与 `static/core/` 契约。
-2. 判定来源模式：`paper-equation` / `paper-structure` / `canonical-fallback`。
+2. 判定来源模式：`论文公式` / `论文结构` / `通用定义`。
 3. 选择模块族 fragment（attention、convolution、…）。
 4. 生成固定四段 Math-Flow 卡片 + 页眉状态行。
 5. 运行 `scripts/audit_math_flow.py`，错误修复后交付。
@@ -48,10 +48,12 @@
 
 ### 四段结构（不可变）
 
-1. 模块原理总结 (Module Principle Summary)
-2. 具体输入定义 (Specific Input Definition)
-3. 完整数据流转过程 (Complete Mathematical Data Flow)
-4. 具体输出总结 (Specific Output Summary)
+1. 模块原理总结
+2. 具体输入定义
+3. 完整数据流转过程
+4. 具体输出总结
+
+输出中的标题、字段名、状态信息和解释文字全部使用中文。计算步骤按语义阶段组织，避免把投影、变形、转置等连续操作机械拆碎。形状定义与核心公式一律使用块级 `$$`，行内 `$...$` 仅保留极简单符号。
 
 ## 安装
 
@@ -77,17 +79,15 @@ git clone <your-repo-url> "$env:USERPROFILE\.cursor\skills\math-flow"
 .cursor/skills/math-flow
 ```
 
-## 运行审计
+## 运行审计与评测
 
 ```bash
 python scripts/audit_math_flow.py path/to/math-flow-self-attention.md --output audit-report.json
-```
-
-运行单测：
-
-```bash
+python scripts/run_evals.py
 python -m unittest discover -s tests -v
 ```
+
+`evals/evals.json` 绑定可执行 fixture（期望 `status` / 必要 error code），不是纯自然语言描述。
 
 ## 仓库结构
 

@@ -21,25 +21,59 @@ Use these defaults unless the paper defines others. State deviations in the card
 - $h$: number of heads
 - $r$: reduction ratio (SRA-like)
 
-## Dimension transformation grammar
+## Named tensor grammar
 
-Write shapes in contiguous ASCII tuples:
-
-```text
-(B, N, C) -> (B, N, d)
-```
-
-For multi-operand steps, show the contracting product:
+Write tensors as `Name:(shape)` inside Inputs / Outputs / Dimension Transformation.
 
 ```text
-(B, h, N, d_h) x (B, h, d_h, N) -> (B, h, N, N)
+X:(B, N, C)
+Q:(B, h, N, d_h)
 ```
 
-If only a view changes, still add a step named `Reshape` / `Transpose` / `Permute`.
+### Unary
+
+```text
+X:(B, N, C) -> Q:(B, N, d)
+```
+
+### Matmul / bmm
+
+```text
+Q:(B, h, N, d_h) x KT:(B, h, d_h, N) -> Scores:(B, h, N, N)
+```
+
+### Residual / element-wise add
+
+```text
+X:(B, N, C) + F:(B, N, C) -> Y:(B, N, C)
+```
+
+### Element-wise mul (Hadamard)
+
+```text
+G:(B, N, C) odot H:(B, N, C) -> Z:(B, N, C)
+```
+
+Use ASCII `odot` in the dimension line; keep $\odot$ in LaTeX formulas.
+
+### Multi-output split
+
+```text
+Z:(B, N, 3d) -> Q:(B, N, d), K:(B, N, d), V:(B, N, d)
+```
+
+### Branches
+
+No special arrow is required. Define `X` once, then list `X:(...)` again in later steps' **Inputs**.
+
+### Residuals with identity path
+
+Treat the skip tensor as an ordinary named input to an add/fuse step. Do not hide it inside an anonymous `(B,N,C) -> (B,N,C)` line.
 
 ## Operator specificity
 
-- Matrix product: juxtaposition or $\times$ with axes implied by shapes
-- Batched matmul: state batch/head axes as broadcasted
-- Element-wise: use $\odot$ or explicit `element-wise`
+- Matrix product: juxtaposition in formulas; `x` in dimension lines
+- Batched matmul: keep batch/head axes explicit in shapes
+- Element-wise: $\odot$ in LaTeX; `odot` or `+` in dimension lines
 - Softmax: name the axis, e.g. $\mathrm{softmax}_{N_k}(\cdot)$
+- Layout-only ops still get their own Step (`Reshape` / `Transpose` / `Permute`)

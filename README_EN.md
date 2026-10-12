@@ -61,12 +61,15 @@ git clone <your-repo-url> ~/.cursor/skills/math-flow
 
 Or vendor it as a project skill under `.cursor/skills/math-flow`.
 
-## Audit & tests
+## Audit, evals & tests
 
 ```bash
 python scripts/audit_math_flow.py path/to/math-flow-self-attention.md --output audit-report.json
+python scripts/run_evals.py
 python -m unittest discover -s tests -v
 ```
+
+`evals/evals.json` references executable fixtures with expected auditor `status` and required error codes.
 
 ## License
 

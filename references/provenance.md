@@ -1,34 +1,34 @@
-# Provenance and honesty rules
+# 来源与诚实性规则
 
 Math-Flow cards must remain usable when the source is incomplete.
 
-## Labels
+## 标签
 
-| Label | Meaning | Typical use |
+| 标签 | 含义 | 典型用途 |
 |-------|---------|-------------|
-| `[Paper]` | Directly supported by paper equation/figure/text | Copied or lightly notationally normalized formulas |
-| `[Analysis]` | Reconstructed from prose/block diagram | Missing closed form but clear algorithmic intent |
-| `[Assumption]` | Chosen because source omitted a value | $B$, $h$, padding, exact `same` size policy |
-| `[Canonical]` | Standard definition outside the paper | `canonical-fallback` mode |
+| `[论文]` | 论文公式、图或正文直接支持 | 原式或仅做记号统一的公式 |
+| `[分析]` | 根据文字或框图重建 | 无闭式公式但算法意图明确 |
+| `[假设]` | 来源缺失时作出的设定 | $B$、$h$、填充策略等 |
+| `[通用定义]` | 论文外的标准定义 | “通用定义”来源模式 |
 
 ## Mode policy
 
-### paper-equation
+### 论文公式
 
 - Prefer paper symbol names.
-- If you rename, add `Symbol alias:` bullets in Section 2.
+- 如果改名，在第 2 节增加“符号对应”条目。
 - Do not replace a paper-specific reduction with a textbook attention block.
 
-### paper-structure
+### 论文结构
 
 - Reconstruct step-by-step math that implements the described module.
-- Mark reconstructed equations `[Analysis]`.
-- If two reconstructions are equally plausible, pick the simpler one and list the ambiguity under Assumptions.
+- 重建公式标为 `[分析]`。
+- 若存在两种同样合理的重建，选择更简洁者，并在“假设”中说明歧义。
 
-### canonical-fallback
+### 通用定义
 
 - Allowed when the user names a well-known module without paper text.
-- Header `Source coverage` must be `Canonical knowledge only`.
+- 状态头“来源覆盖”必须为“仅通用知识”。
 - State which canonical variant you use (e.g. Vaswani et al. scaled dot-product MHSA).
 
 ## Forbidden

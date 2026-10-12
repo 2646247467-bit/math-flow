@@ -1,37 +1,40 @@
-# Core principles
+# 核心原则
 
-Build a Math-Flow card that lets an engineer reconstruct a module's exact tensor computation without rereading the whole paper.
+生成一份无需重读整篇论文即可重建模块张量计算过程的 Math-Flow 卡片。
 
-## Non-negotiable stance
+## 不可违背的原则
 
-- Trace **specific inputs → intermediate tensors → specific outputs**, not slogan-level intuition.
-- Every computational step needs: operation name, formula, shape transform, and a one-line functional explanation.
-- Prefer the paper's own symbols when available; if you rename symbols, provide an explicit alias table.
-- Keep dimension chains continuous: step $k$ output shape must match step $k+1$ input shape (up to documented view/reshape).
-- Separate paper facts from reconstruction and from textbook fallback.
-- Leave unavailable details as explicit assumptions; never invent paper-only hyperparameters as if they were printed.
+- 追踪**具体输入 → 中间张量 → 具体输出**，而不是停留在口号式直觉。
+- 每个计算步骤都必须包含五个中文字段：输入张量、数学公式、输出张量、维度变换、作用。
+- 形状定义与核心计算一律使用块级 `$$`；行内 `$...$` 仅允许极简单符号。
+- 按**语义完整阶段**拆分：合并连续且无独立分析价值的过渡操作；只在分支、复用、残差或关键语义边界处分步。
+- 优先用复合公式一步表达，不为短暂过渡张量额外命名。
+- 用命名生产者/消费者构成的**张量图**表达连续性，不强制使用线性形状链；分支、残差和多输入输出均应显式表达。
+- 优先沿用论文符号；如需改名，给出明确的符号对应关系。
+- 区分论文事实、分析重建和通用定义。
+- 缺失信息必须标为假设，不得把推测的超参数写成论文事实。
 
-## Scope
+## 范围
 
-Produce only the Math-Flow card (header + Sections 1–4). Do not add:
+只生成状态头与第 1–4 节 Math-Flow 卡片，不增加：
 
-- full-paper summary or related-work survey;
-- training recipes, optimizer settings, or dataset discussion (unless required by the module math);
-- runnable training code dumps;
-- formal peer-review judgments;
-- alternate architectures “you might also try” unless the user asks.
+- 整篇论文摘要或相关工作综述；
+- 与模块数学无关的训练策略、优化器或数据集讨论；
+- 大段可运行训练代码；
+- 正式同行评审意见；
+- 用户未要求的替代架构建议。
 
-## Provenance classes
+## 来源标签
 
-Use these labels when a statement is not a direct transcription of the paper equation:
+当内容不是论文公式的直接转写时，使用以下标签：
 
-- `[Paper]` — taken from the paper equation/figure/text
-- `[Analysis]` — faithful reconstruction from paper description
-- `[Assumption]` — hyper-parameter or layout chosen because the source omitted it
-- `[Canonical]` — standard definition used in `canonical-fallback` mode
+- `[论文]`——来自论文公式、图或正文
+- `[分析]`——根据论文描述进行的忠实重建
+- `[假设]`——来源缺失时选定的超参数或布局
+- `[通用定义]`——在“通用定义”模式下采用的标准定义
 
-## Language
+## 语言
 
-- Explanatory prose: Simplified Chinese
-- Section headings: exactly as specified in the output contract
-- Symbols / ops / established English terms: keep canonical forms (`softmax`, `LayerNorm`, `Conv2d`)
+- 所有标题、字段名、解释和状态信息均使用简体中文。
+- 仅保留论文固有模块名、标准缩写及数学符号；首次出现时可用中文说明。
+- 章节标题严格使用输出契约规定的纯中文标题。
